@@ -20,6 +20,15 @@ type User {
     posts: [Post!]! @hasMany
 }
 
+type Mutation {
+  createUser(
+    name: String! @rules(apply: ["min:6"])
+    email: String! @rules(apply: ["email", "unique:users"])
+    # password: String! @bcrypt @rules(apply: ["min:6"]) これだとバリデーションが効かない。directiveの順番が処理順に影響する
+    password: String! @rules(apply: ["min:6"]) @bcrypt
+  ): User @create
+}
+
 type Post {
   id: ID!
   title: String!
