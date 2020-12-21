@@ -27,6 +27,11 @@ type Mutation {
     # password: String! @bcrypt @rules(apply: ["min:6"]) これだとバリデーションが効かない。directiveの順番が処理順に影響する
     password: String! @rules(apply: ["min:6"]) @bcrypt
   ): User @create
+
+  login(
+    email: String! 
+    password: String!
+  ): String @field(resolver: "AuthMutator@resolve")
 }
 
 type Post {
