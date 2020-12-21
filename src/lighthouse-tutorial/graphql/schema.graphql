@@ -4,11 +4,25 @@ scalar Date @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\Date")
 "A datetime string with format `Y-m-d H:i:s`, e.g. `2018-05-23 13:43:32`."
 scalar DateTime @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\DateTime")
 
-type Query {
+type Query @middleware(checks: ["auth:api"]) {
     users: [User!]! @paginate(defaultCount: 10)
     user(id: ID @eq): User @find
     posts: [Post!]! @all
     post(id: Int! @eq): Post @find
+}
+
+type Mutation {
+  createUser(
+    name: String! @rules(apply: ["min:6"])
+    email: String! @rules(apply: ["email", "unique:users"])
+    # password: String! @bcrypt @rules(apply: ["min:6"]) これだとバリデーションが効かない。directiveの順番が処理順に影響する
+    password: String! @rules(apply: ["min:6"]) @bcrypt
+  ): User @create @middleware(checks: ["auth:api"]) 
+
+  login(
+    email: String! 
+    password: String!
+  ): String @field(resolver: "AuthMutator@resolve")
 }
 
 type User {
@@ -18,20 +32,6 @@ type User {
     created_at: DateTime!
     updated_at: DateTime!
     posts: [Post!]! @hasMany
-}
-
-type Mutation {
-  createUser(
-    name: String! @rules(apply: ["min:6"])
-    email: String! @rules(apply: ["email", "unique:users"])
-    # password: String! @bcrypt @rules(apply: ["min:6"]) これだとバリデーションが効かない。directiveの順番が処理順に影響する
-    password: String! @rules(apply: ["min:6"]) @bcrypt
-  ): User @create
-
-  login(
-    email: String! 
-    password: String!
-  ): String @field(resolver: "AuthMutator@resolve")
 }
 
 type Post {
